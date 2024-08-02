@@ -6,7 +6,6 @@ export default function Home() {
   return (
     
     <div>
-      <h1>Pantry Tracker</h1>
       <ItemList/>
     </div>
   );

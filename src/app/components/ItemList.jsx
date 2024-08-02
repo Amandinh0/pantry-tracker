@@ -11,7 +11,7 @@ import {
   TextField,
   Container,
 } from "@mui/material";
-import { collection, getDocs, query, addDoc, setDoc, doc, deleteDoc} from "firebase/firestore";
+import { collection, getDocs, query, addDoc, setDoc, doc, deleteDoc, getDoc} from "firebase/firestore";
 import { useEffect } from "react";
 
 
@@ -39,7 +39,7 @@ export default function ItemList() {
     const docs = await getDocs(qureyItems);
     const pantryList = [];
     docs.forEach((doc) => {
-      pantryList.push(doc.id);
+      pantryList.push({name: doc.id, count: doc.data()});
     });
     console.log(pantryList);
     setPantry(pantryList);
@@ -47,6 +47,13 @@ export default function ItemList() {
 
   const removeItem = async (item) =>{
     const docRef =  doc(collection(firestore, 'Pantry'), item);
+    const docSnap = await getDoc(docRef)
+    // console.log(docSnap.data().count)
+    if(docSnap.data().count > 1){
+      await setDoc(docRef, {count: docSnap.data().count - 1})
+      await updatePantry()
+      return
+    }
     await deleteDoc(docRef)
     await updatePantry();
 
@@ -61,7 +68,14 @@ export default function ItemList() {
     try{
     console.log("Adding item: " + item)
     const docRef =  doc(collection(firestore, 'Pantry'), item);
-    await setDoc(docRef, {})
+    const docSnap = await getDoc(docRef)
+    if (docSnap.exists()){
+      const {count} = docSnap.data()
+      await setDoc(docRef, {count: count + 1})
+      await updatePantry()
+      return
+    }
+    await setDoc(docRef, {count: 1})
     updatePantry();
     }catch(e){
       console.log(`Error adding to DB: ${e}`)
@@ -71,7 +85,22 @@ export default function ItemList() {
   return (
     <>
     <Container>
+    <Box
+      display="flex"
+      justifyContent={"space-between"}
+      // alignItems="center"
+      p={2}
+    >
+    <Typography 
+    variant="h3"
+    justifyItems={"center"}
+    textAlign={"center"}>
+      Pantry Items
+    </Typography>
+    
     <Button onClick={handleOpen} variant="contained">Add</Button>
+    
+    </Box>
     <Modal sx={modalStyle}
         open={open}
         onClose={handleClose}
@@ -111,25 +140,24 @@ export default function ItemList() {
         </Box>
       </Modal>
 
-      <Box
-        height={50}
-        width={100}
-        display="flex"
-        alignItems="center"
-        flexDirection={"column"}
-      >
-        Pantry Items
-      </Box>
+      
 
       <Stack spacing={2}>
-      {pantry.map((item, index) => (
+      {pantry.map((item) => (
         <Stack
         direction={"row"}
         spacing={10}
         justifyContent={"center"}
         alignContent={"space-between"}
-        display={"flex"}>
+        display={"flex"}
+        bgcolor={"#068D9D"}
+        p={3}
+        borderRadius={5} // Adjust the value to your preference
+        boxShadow={3}
+        >
+        
         <Box
+          key={item.name}
           height={50}
           width="100%"
           display="flex"
@@ -140,12 +168,17 @@ export default function ItemList() {
           borderRadius={5} // Adjust the value to your preference
           boxShadow={3}
         >
-          {item}
+          {item.name}
         </Box>
+        
+        <Typography variant="h4"
+        textAlign={"center"}>
+          Quantity:{item.count.count}
+        </Typography>
 
         <Button 
         variant="contained"
-        onClick={() => removeItem(item)}>
+        onClick={() => removeItem(item.name)}>
           Remove
           </Button>
         </Stack>
