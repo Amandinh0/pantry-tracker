@@ -7,12 +7,12 @@ const Layout = ({ children }) => {
       <Box 
       className="main-container" 
       mx="auto" 
-      my={4}
+      //my={4}
       display="flex"
       flexDirection="column"
       alignItems="center"
-      justifyContent="center"
-      minHeight="100vh"
+      //justifyContent="center"
+      //minHeight="100vh"
         >
         {children}
       </Box>

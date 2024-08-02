@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { firestore } from "../firebase";
+import { firestore, auth } from "../firebase";
 import {
   Box,
   Stack,
@@ -13,6 +13,8 @@ import {
 } from "@mui/material";
 import { collection, getDocs, query, addDoc, setDoc, doc, deleteDoc, getDoc} from "firebase/firestore";
 import { useEffect } from "react";
+import { onAuthStateChanged, signOut } from 'firebase/auth'
+import { useRouter } from 'next/navigation';
 
 
 const modalStyle = {
@@ -32,10 +34,34 @@ export default function ItemList() {
   const [open, setOpen] = useState(false);
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
-  const [itemName, setItemName] = useState('')
+  const[user, setUser] = useState(null);
+  const[itemName, setItemName] = useState('')
+  const router = useRouter();
 
-  const updatePantry = async () => {
-    const qureyItems = query(collection(firestore, "Pantry"));
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      
+      if (user) {
+        // setUser(user);
+        setUser(user);
+        console.log(user)
+        updatePantry(user)
+        
+      } else {
+        setUser(null);
+        router.push('/')
+      }
+    });
+    
+    return () => unsubscribe();
+  }, [router]);
+
+  
+  
+
+  const updatePantry = async (currentUser) => {
+    const qureyItems = query(collection(firestore, "users", currentUser.uid, 'Inventory'));
     const docs = await getDocs(qureyItems);
     const pantryList = [];
     docs.forEach((doc) => {
@@ -46,60 +72,74 @@ export default function ItemList() {
   };
 
   const removeItem = async (item) =>{
-    const docRef =  doc(collection(firestore, 'Pantry'), item);
+    const docRef =  doc(collection(firestore, 'users', user.uid , 'Inventory'), item);
     const docSnap = await getDoc(docRef)
     // console.log(docSnap.data().count)
     if(docSnap.data().count > 1){
       await setDoc(docRef, {count: docSnap.data().count - 1})
-      await updatePantry()
+      await updatePantry(user)
       return
     }
     await deleteDoc(docRef)
-    await updatePantry();
+    await updatePantry(user);
 
   }
 
-  useEffect(() => {
-  
-    updatePantry();
-  }, []);
 
   const handleAdd  = async (item) => {
     try{
     console.log("Adding item: " + item)
-    const docRef =  doc(collection(firestore, 'Pantry'), item);
+    const docRef =  doc(collection(firestore, 'users',user.uid,'Inventory'), item);
     const docSnap = await getDoc(docRef)
     if (docSnap.exists()){
       const {count} = docSnap.data()
       await setDoc(docRef, {count: count + 1})
-      await updatePantry()
+      await updatePantry(user)
       return
     }
     await setDoc(docRef, {count: 1})
-    updatePantry();
+    updatePantry(user);
     }catch(e){
       console.log(`Error adding to DB: ${e}`)
     }
   }
 
+  
+  const handleLogout =async () =>{
+    try {
+      await signOut(auth);
+      //setUser(null);
+      router.push('/')
+
+    } catch (error) {
+      console.error("Error signing out: ", error);
+    }
+  }
+
   return (
     <>
-    <Container>
+    <Container maxWidth='lg'>
     <Box
-      display="flex"
+    display={"flex"}
+      width="100%"
       justifyContent={"space-between"}
-      // alignItems="center"
       p={2}
+      //boxSizing={"bor"}
     >
     <Typography 
     variant="h3"
-    justifyItems={"center"}
-    textAlign={"center"}>
-      Pantry Items
+    justifyContent={"left"}
+     > {/*user.displayName*/} Pantry Items
     </Typography>
-    
-    <Button onClick={handleOpen} variant="contained">Add</Button>
-    
+
+    <Box>
+      <Button variant="contained" sx={{ mr: 2 }} onClick={handleLogout}>
+        Log Out
+      </Button>
+      <Button onClick={handleOpen} variant="contained">
+        Add
+      </Button>
+    </Box>
     </Box>
     <Modal sx={modalStyle}
         open={open}
@@ -150,25 +190,27 @@ export default function ItemList() {
         justifyContent={"center"}
         alignContent={"space-between"}
         display={"flex"}
-        bgcolor={"#068D9D"}
+        bgcolor={"#F4B7A1"}
         p={3}
-        borderRadius={5} // Adjust the value to your preference
-        boxShadow={3}
+        borderRadius={5} 
+        //boxShadow={3}
         >
         
         <Box
           key={item.name}
           height={50}
-          width="100%"
+          width="50%"
           display="flex"
           alignItems="center"
           flexDirection={"column"}
-          bgcolor={'#976391'}
+          //bgcolor={'#F7A48D'}
           justifyContent={'center'}
-          borderRadius={5} // Adjust the value to your preference
-          boxShadow={3}
+          borderRadius={10} // Adjust the value to your preference
+          boxShadow={2}
         >
+          <Typography variant="h4">
           {item.name}
+          </Typography>
         </Box>
         
         <Typography variant="h4"
