@@ -2,6 +2,7 @@
   "name": "pantry-tracker2",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -12,7 +13,9 @@
     "@emotion/react": "^11.13.0",
     "@emotion/styled": "^11.13.0",
     "@mui/material": "^5.16.6",
+    "dotenv": "^16.4.5",
     "firebase": "^10.12.4",
+    "markdown-to-jsx": "^7.4.7",
     "next": "14.2.5",
     "react": "^18",
     "react-camera-pro": "^1.4.0",

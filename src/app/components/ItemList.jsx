@@ -1,7 +1,9 @@
-"use client";
+'use client';
 
-import React, { useState, useRef } from "react";
-import { firestore, auth } from "../firebase";
+import Markdown from 'markdown-to-jsx';
+import { getResponse } from '../api.mjs';
+import React, { useState, useRef } from 'react';
+import { firestore, auth } from '../firebase';
 import {
   Box,
   Stack,
@@ -10,7 +12,7 @@ import {
   Modal,
   TextField,
   Container,
-} from "@mui/material";
+} from '@mui/material';
 import {
   collection,
   getDocs,
@@ -20,21 +22,23 @@ import {
   doc,
   deleteDoc,
   getDoc,
-} from "firebase/firestore";
-import { useEffect } from "react";
-import { onAuthStateChanged, signOut } from "firebase/auth";
-import { useRouter } from "next/navigation";
-import { Camera } from "react-camera-pro";
+} from 'firebase/firestore';
+import { useEffect } from 'react';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { useRouter } from 'next/navigation';
+import { Camera } from 'react-camera-pro';
+import dotenv from 'dotenv';
+dotenv.config();
 
 const modalStyle = {
-  position: "absolute",
-  top: "50%",
-  left: "50%",
-  transform: "translate(-50%, -50%)",
+  position: 'absolute',
+  top: '50%',
+  left: '50%',
+  transform: 'translate(-50%, -50%)',
   width: 400,
   height: 250,
-  bgcolor: "#fff",
-  border: "2px solid #000",
+  bgcolor: '#fff',
+  border: '2px solid #000',
   boxShadow: 24,
   p: 4,
 };
@@ -45,11 +49,12 @@ export default function ItemList() {
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
   const [user, setUser] = useState(null);
-  const [itemName, setItemName] = useState("");
-  const [search, setSearch] = useState("");
+  const [itemName, setItemName] = useState('');
+  const [search, setSearch] = useState('');
   const [cameraOpen, setCameraOpen] = useState(false);
   const camera = useRef(null);
   const [image, setImage] = useState(null);
+  const [recipe, setRecipe] = useState('');
   const router = useRouter();
   console.log(search);
 
@@ -62,16 +67,18 @@ export default function ItemList() {
         updatePantry(user);
       } else {
         setUser(null);
-        router.push("/");
+        router.push('/');
       }
     });
 
     return () => unsubscribe();
   }, [router]);
 
+  //Params: User object that represents the current logged in user
+  //Use: Updated the current displayed list of items with new ones from database
   const updatePantry = async (currentUser) => {
     const qureyItems = query(
-      collection(firestore, "users", currentUser.uid, "Inventory")
+      collection(firestore, 'users', currentUser.uid, 'Inventory')
     );
     const docs = await getDocs(qureyItems);
     const pantryList = [];
@@ -82,9 +89,10 @@ export default function ItemList() {
     setPantry(pantryList);
   };
 
+  //Param: Item name that needs to be removed from the
   const removeItem = async (item) => {
     const docRef = doc(
-      collection(firestore, "users", user.uid, "Inventory"),
+      collection(firestore, 'users', user.uid, 'Inventory'),
       item
     );
     const docSnap = await getDoc(docRef);
@@ -100,9 +108,9 @@ export default function ItemList() {
 
   const handleAdd = async (item) => {
     try {
-      console.log("Adding item: " + item);
+      console.log('Adding item: ' + item);
       const docRef = doc(
-        collection(firestore, "users", user.uid, "Inventory"),
+        collection(firestore, 'users', user.uid, 'Inventory'),
         item
       );
       const docSnap = await getDoc(docRef);
@@ -123,9 +131,9 @@ export default function ItemList() {
     try {
       await signOut(auth);
       //setUser(null);
-      router.push("/");
+      router.push('/');
     } catch (error) {
-      console.error("Error signing out: ", error);
+      console.error('Error signing out: ', error);
     }
   };
 
@@ -133,22 +141,46 @@ export default function ItemList() {
     setCameraOpen(!cameraOpen);
   };
 
+  const handleApiCall = async () => {
+    //console.log(`API key inside my component${process.env.NEXT_PUBLIC_OPEN_ROUTER_API_KEY}`);
+    if (pantry) {
+      let pantryString = '';
+      pantry.map((item) => {
+        pantryString += `${item.name}\n`;
+      });
+      try {
+        const data = await getResponse(pantryString);
+        setRecipe(data);
+        console.log(`Inside Itemlist:`);
+        console.log(recipe);
+      } catch (err) {
+        console.log(`Error calling API from component: ${err}`);
+      }
+    }
+  };
+
+  const saveImage = () => {
+    console.log('Image saved:');
+    console.log(image);
+    toggleCamera();
+  };
+
   return (
     <>
       <Container maxWidth="lg">
         <Box
-          display={"flex"}
+          display={'flex'}
           width="100%"
-          justifyContent={"space-between"}
+          justifyContent={'space-between'}
           p={2}
           //boxSizing={"bor"}
         >
           <Typography
             variant="h3"
-            justifyContent={"left"}
-            sx={{ fontFamily: "PT Sans" }}
+            justifyContent={'left'}
+            sx={{ fontFamily: 'PT Sans' }}
           >
-            {" "}
+            {' '}
             {/*user.displayName*/} Pantry Items
           </Typography>
           <TextField
@@ -160,11 +192,17 @@ export default function ItemList() {
             }}
           />
           <Box>
+            {/* <Button variant="contained" sx={{ mr: 2 }} onClick={handleLogout}>
+              Log Out
+            </Button> */}
+            <Button onClick={handleOpen} variant="contained" sx={{ mr: 2 }}>
+              Add
+            </Button>
+            <Button variant="contained" sx={{ mr: 2 }} onClick={handleApiCall}>
+              Generate Recipe
+            </Button>
             <Button variant="contained" sx={{ mr: 2 }} onClick={handleLogout}>
               Log Out
-            </Button>
-            <Button onClick={handleOpen} variant="contained">
-              Add
             </Button>
           </Box>
         </Box>
@@ -175,7 +213,7 @@ export default function ItemList() {
           aria-labelledby="modal-modal-title"
           aria-describedby="modal-modal-description"
         >
-          <Box justifyContent={"center"} alignItems={"center"}>
+          <Box justifyContent={'center'} alignItems={'center'}>
             <Typography id="modal-modal-title" variant="h6" component="h2">
               Add an Item
             </Typography>
@@ -188,17 +226,17 @@ export default function ItemList() {
               onChange={(e) => setItemName(e.target.value)}
             />
             <Stack
-              direction={"row"}
+              direction={'row'}
               spacing={2}
               p={4}
-              justifyContent={"center"}
+              justifyContent={'center'}
             >
               <Button
                 variant="contained"
                 onClick={() => {
                   toggleCamera();
                   handleClose();
-                  setItemName("");
+                  setItemName('');
                 }}
               >
                 Use Camera
@@ -209,7 +247,7 @@ export default function ItemList() {
                 onClick={() => {
                   handleAdd(itemName.toLowerCase());
                   handleClose();
-                  setItemName("");
+                  setItemName('');
                 }}
               >
                 Add
@@ -218,7 +256,7 @@ export default function ItemList() {
                 variant="contained"
                 onClick={() => {
                   handleClose();
-                  setItemName("");
+                  setItemName('');
                 }}
               >
                 Cancel
@@ -230,22 +268,22 @@ export default function ItemList() {
         {cameraOpen && (
           <div
             style={{
-              display: "flex",
-              width: "100vw",
-              height: "100vh",
-              justifyContent: "space-between",
+              display: 'flex',
+              width: '100vw',
+              height: '100vh',
+              justifyContent: 'space-between',
             }}
           >
             <div
               style={{
-                width: "50vw",
-                height: "100vh",
-                position: "fixed",
+                width: '50vw',
+                height: '100vh',
+                position: 'fixed',
                 left: 0,
                 top: 0,
-                backgroundColor: "#f5f5f5",
-                padding: "20px",
-                boxSizing: "border-box",
+                backgroundColor: '#f5f5f5',
+                padding: '20px',
+                boxSizing: 'border-box',
               }}
             >
               <Camera ref={camera} />
@@ -263,86 +301,201 @@ export default function ItemList() {
               >
                 Take photo
               </Button>
-              <Button variant="contained" onClick={toggleCamera}>
+              <Button
+                variant="contained"
+                onClick={() => {
+                  toggleCamera();
+                  setImage(null);
+                }}
+              >
                 Cancel
               </Button>
             </div>
             {image && (
               <div
                 style={{
-                  width: "50vw",
-                  height: "100vh",
-                  position: "fixed",
+                  width: '50vw',
+                  height: '100vh',
+                  position: 'fixed',
                   right: 0,
                   top: 0,
-                  backgroundColor: "#e0e0e0",
-                  padding: "20px",
-                  boxSizing: "border-box",
+                  backgroundColor: '#e0e0e0',
+                  padding: '20px',
+                  boxSizing: 'border-box',
                 }}
               >
+                <Button variant="contained" onClick={saveImage}>
+                  Use Image
+                </Button>
                 <img
                   src={image}
                   alt="Taken photo"
-                  style={{ width: "100%", height: "auto" }}
+                  style={{ width: '100%', height: 'auto' }}
                 />
               </div>
             )}
           </div>
         )}
 
-        <Stack spacing={2}>
-          {pantry
-            .filter((item) => {
-              return search.toLowerCase() === ""
-                ? item
-                : item.name.toLowerCase().includes(search);
-            })
-            .map((item) => (
-              <Stack
-                key={item.name}
-                direction={"row"}
-                spacing={10}
-                justifyContent={"center"}
-                alignContent={"space-between"}
-                display={"flex"}
-                bgcolor={"#F4B7A1"}
-                p={3}
-                borderRadius={5}
-                //boxShadow={3}
-              >
-                <Box
+        <Box
+          sx={{
+            width: '100%',
+            height: '500px',
+            overflow: 'auto',
+            border: '1px solid #ddd',
+          }}
+        >
+          <Stack spacing={2}>
+            {pantry
+              .filter((item) => {
+                return search.toLowerCase() === ''
+                  ? item
+                  : item.name.toLowerCase().includes(search);
+              })
+              .map((item) => (
+                <Stack
                   key={item.name}
-                  height={50}
-                  width="50%"
-                  display="flex"
-                  alignItems="center"
-                  flexDirection={"column"}
-                  justifyContent={"center"}
-                  borderRadius={10} // Adjust the value to your preference
-                  boxShadow={2}
+                  direction={'row'}
+                  spacing={10}
+                  justifyContent={'center'}
+                  alignContent={'space-between'}
+                  display={'flex'}
+                  bgcolor={'#F4B7A1'}
+                  p={3}
+                  borderRadius={5}
+                  //boxShadow={3}
                 >
-                  <Typography
-                    sx={{ fontFamily: "PT Sans" }}
-                    variant="h4"
+                  <Box
                     key={item.name}
+                    height={50}
+                    width="50%"
+                    display="flex"
+                    alignItems="center"
+                    flexDirection={'column'}
+                    justifyContent={'center'}
+                    borderRadius={10} // Adjust the value to your preference
+                    boxShadow={2}
                   >
-                    {item.name.charAt(0).toUpperCase() + item.name.slice(1)}
+                    <Typography
+                      sx={{ fontFamily: 'PT Sans' }}
+                      variant="h4"
+                      key={item.name}
+                    >
+                      {item.name.charAt(0).toUpperCase() + item.name.slice(1)}
+                    </Typography>
+                  </Box>
+
+                  <Typography variant="h4" textAlign={'center'}>
+                    Quantity:{item.count.count}
                   </Typography>
-                </Box>
 
-                <Typography variant="h4" textAlign={"center"}>
-                  Quantity:{item.count.count}
-                </Typography>
+                  <Button
+                    variant="contained"
+                    onClick={() => removeItem(item.name)}
+                  >
+                    Remove
+                  </Button>
+                </Stack>
+              ))}
+          </Stack>
+        </Box>
 
-                <Button
-                  variant="contained"
-                  onClick={() => removeItem(item.name)}
-                >
-                  Remove
-                </Button>
-              </Stack>
-            ))}
-        </Stack>
+        <Box
+          display={'flex'}
+          bgcolor={'#F4B7A1'}
+          //alignItems="center"
+          //flexDirection={'column'}
+          //justifyContent={'center'}
+          p={4}
+          borderRadius={5}
+          boxShadow={3}
+          sx={{ margin: '0 auto' }}
+        >
+          {recipe ? (
+            <div>
+              <Typography
+                variant="h3"
+                //justifyContent={'left'}
+                alignItems="flex-start"
+                sx={{ fontFamily: 'PT Sans' }}
+                p={2}
+              >
+                Recipe:
+              </Typography>
+
+              <Button
+                variant="contained"
+                display="flex"
+                justifyContent="flex-end"
+                onClick={handleApiCall}
+                sx={{
+                  mr: 2,
+                  backgroundColor: '#3B8C88',
+                  color: '#FFFFFF', // White text color
+                  '&:hover': {
+                    backgroundColor: '#1E5958', // Dark teal on hover
+                  },
+                }}
+              >
+                Regenerate Recipe
+              </Button>
+
+              <Markdown
+                options={{
+                  overrides: {
+                    p: {
+                      component: Typography,
+                      props: {
+                        variant: 'body1',
+                        sx: {
+                          fontFamily: 'PT Sans',
+                          marginBottom: 1,
+                          fontSize: '2rem',
+                        },
+                      },
+                    },
+                    ul: {
+                      component: 'ul',
+                      props: {
+                        style: { paddingLeft: '1.5rem', marginBottom: 1 },
+                      },
+                    },
+                    li: {
+                      component: Typography,
+                      props: {
+                        component: 'li',
+                        variant: 'body1',
+                        sx: {
+                          fontFamily: 'PT Sans',
+                          marginBottom: 0.5,
+                          fontSize: '1.25rem',
+                        },
+                      },
+                    },
+                    ol: {
+                      component: 'ol',
+                      props: {
+                        style: { paddingLeft: '1.5rem', marginBottom: 1 },
+                      },
+                    },
+                  },
+                }}
+              >
+                {recipe}
+              </Markdown>
+            </div>
+          ):(
+            <Typography
+            variant="h4"
+                //justifyContent={'left'}
+                alignItems="flex-start"
+                sx={{ fontFamily: 'PT Sans' }}
+                 >
+              Press 'Generate Recipe' to get a simple recipe including all your
+              Pantry Items
+            </Typography>
+          )}
+        </Box>
       </Container>
     </>
   );
