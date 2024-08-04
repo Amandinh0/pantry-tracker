@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { firestore, auth } from "../firebase";
 import {
   Box,
@@ -40,7 +40,9 @@ export default function ItemList() {
   const[user, setUser] = useState(null);
   const[itemName, setItemName] = useState('')
   const[search, setSearch] = useState('')
-  const[camera, setCamera] = useState(false)
+  const[cameraOpen, setCameraOpen] = useState(false)
+  const camera = useRef(null);
+  const [image, setImage] = useState(null);
   const router = useRouter();
   console.log(search)
 
@@ -122,6 +124,10 @@ export default function ItemList() {
     }
   }
 
+  const toggleCamera = () =>{
+    setCameraOpen(!cameraOpen)
+  }
+
   return (
     <>
     <Container maxWidth='lg'>
@@ -180,9 +186,15 @@ export default function ItemList() {
           p={4} 
           justifyContent={"center"}>
             <Button
-            variant="contained">
+            variant="contained"
+            onClick={() => {
+              toggleCamera()
+              handleClose()
+              setItemName('')
+              }}>
               Use Camera
             </Button>
+
             <Button 
             variant="contained"
             onClick={()=>{
@@ -202,7 +214,37 @@ export default function ItemList() {
               
           </Stack>
         </Box>
+        
       </Modal>
+
+      {cameraOpen && (
+            <div style={{ width: '50vw', height: '100vh', position: 'fixed', left: 0, top: 0, backgroundColor: '#f5f5f5', padding: '20px', boxSizing: 'border-box' }}>
+              <Camera ref={camera} />
+             
+              <Button variant="contained" onClick={()=>{
+                const photo = camera.current.takePhoto();
+                setImage(photo);
+                console.log('Image set')
+                console.log(image)
+                //toggleCamera();
+              }}>
+                Take photo
+              </Button>
+              <Button 
+              variant="contained"
+              onClick={toggleCamera}>
+                Cancel
+                </Button>
+                <img src={image} alt='Image preview' />
+            {/* {image && (
+              <div style={{ marginTop: '20px' }}>
+                <img src={image} alt='Taken photo' style={{ maxWidth: '100%' }} />
+              </div>
+          )} */}
+
+            </div>
+
+            )}
 
       
 
