@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image'
 import Markdown from 'markdown-to-jsx';
 import { getResponse } from '../api.mjs';
 import React, { useState, useRef } from 'react';
@@ -28,6 +29,7 @@ import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { Camera } from 'react-camera-pro';
 import dotenv from 'dotenv';
+import next from 'next';
 dotenv.config();
 
 const modalStyle = {
@@ -327,7 +329,7 @@ export default function ItemList() {
                 <Button variant="contained" onClick={saveImage}>
                   Use Image
                 </Button>
-                <img
+                <Image
                   src={image}
                   alt="Taken photo"
                   style={{ width: '100%', height: 'auto' }}
