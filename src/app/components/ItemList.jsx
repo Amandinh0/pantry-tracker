@@ -15,6 +15,8 @@ import { collection, getDocs, query, addDoc, setDoc, doc, deleteDoc, getDoc} fro
 import { useEffect } from "react";
 import { onAuthStateChanged, signOut } from 'firebase/auth'
 import { useRouter } from 'next/navigation';
+import { Camera } from "react-camera-pro";
+
 
 
 const modalStyle = {
@@ -23,7 +25,8 @@ const modalStyle = {
   left: '50%',
   transform: 'translate(-50%, -50%)',
   width: 400,
-  bgcolor: '#FFFFFF',
+  height: 250,
+  bgcolor: '#fff',
   border: '2px solid #000',
   boxShadow: 24,
   p: 4,
@@ -36,7 +39,10 @@ export default function ItemList() {
   const handleClose = () => setOpen(false);
   const[user, setUser] = useState(null);
   const[itemName, setItemName] = useState('')
+  const[search, setSearch] = useState('')
+  const[camera, setCamera] = useState(false)
   const router = useRouter();
+  console.log(search)
 
 
   useEffect(() => {
@@ -129,10 +135,19 @@ export default function ItemList() {
     <Typography 
     variant="h3"
     justifyContent={"left"}
+    sx={{fontFamily: 'PT Sans' }}
      > {/*user.displayName*/} Pantry Items
     </Typography>
-
+    <TextField 
+    id="outlined-basic" 
+    label="Search" 
+    variant="outlined" 
+    onChange={(e) => {
+      setSearch(e.target.value.toLowerCase())
+      }}/>
     <Box>
+    
+    
       <Button variant="contained" sx={{ mr: 2 }} onClick={handleLogout}>
         Log Out
       </Button>
@@ -159,11 +174,19 @@ export default function ItemList() {
           fullWidth
           value={itemName}
           onChange={(e) => setItemName(e.target.value)}/>
-          <Stack direction={"row"} spacing={2}>
+          <Stack 
+          direction={"row"}
+          spacing={2} 
+          p={4} 
+          justifyContent={"center"}>
+            <Button
+            variant="contained">
+              Use Camera
+            </Button>
             <Button 
             variant="contained"
             onClick={()=>{
-              handleAdd(itemName)
+              handleAdd(itemName.toLowerCase())
               handleClose()
               setItemName('')
             }}>
@@ -176,6 +199,7 @@ export default function ItemList() {
               }}>
               Cancel
               </Button>
+              
           </Stack>
         </Box>
       </Modal>
@@ -183,7 +207,12 @@ export default function ItemList() {
       
 
       <Stack spacing={2}>
-      {pantry.map((item) => (
+      {pantry.filter((item) =>{
+        return search.toLowerCase() === '' 
+        ? 
+        item
+        : item.name.toLowerCase().includes(search)
+      }).map((item) => (
         <Stack
         direction={"row"}
         spacing={10}
@@ -203,13 +232,16 @@ export default function ItemList() {
           display="flex"
           alignItems="center"
           flexDirection={"column"}
-          //bgcolor={'#F7A48D'}
           justifyContent={'center'}
           borderRadius={10} // Adjust the value to your preference
           boxShadow={2}
         >
-          <Typography variant="h4">
-          {item.name}
+          <Typography 
+          sx={{fontFamily: 'PT Sans' }}
+          variant="h4"
+          key={item.name}
+          >
+          {item.name.charAt(0).toUpperCase() + item.name.slice(1)}
           </Typography>
         </Box>
         

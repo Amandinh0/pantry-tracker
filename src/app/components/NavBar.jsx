@@ -11,7 +11,9 @@ export default function NavBar() {
    >
         <Typography
         variant='h2'
-        justifyContent={'center'}>
+        justifyContent={'center'}
+        alignContent={'center'}
+       >
             PantryPal <PiBowlFoodBold />
         </Typography>
    </Box>
