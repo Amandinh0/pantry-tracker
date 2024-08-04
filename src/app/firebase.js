@@ -10,7 +10,7 @@ import {getAuth} from 'firebase/auth';
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  apiKey: "AIzaSyBjWzIylQup7V4Yx_nMnCpUE88r2hCWwC8",
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API,
   authDomain: "food-pantry-84c10.firebaseapp.com",
   databaseURL: "https://food-pantry-84c10-default-rtdb.firebaseio.com",
   projectId: "food-pantry-84c10",
