@@ -329,7 +329,7 @@ export default function ItemList() {
                 <Button variant="contained" onClick={saveImage}>
                   Use Image
                 </Button>
-                <Image
+                <img
                   src={image}
                   alt="Taken photo"
                   style={{ width: '100%', height: 'auto' }}
@@ -493,7 +493,7 @@ export default function ItemList() {
                 alignItems="flex-start"
                 sx={{ fontFamily: 'PT Sans' }}
                  >
-              Press 'Generate Recipe' to get a simple recipe including all your
+              Press &apos;Generate Recipe&apos; to get a simple recipe including all your
               Pantry Items
             </Typography>
           )}
